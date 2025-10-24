@@ -4,6 +4,7 @@ import datetime
 import pytz
 import gspread
 import requests
+import urllib.parse
 from datetime import datetime
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -22,7 +23,7 @@ SHEET_NAME = "CommuteData"  # Master spreadsheet name
 TIMEZONE = pytz.timezone("America/Chicago")
 
 def now_chicago():
-    return datetime.now(TIMEZONE)
+    return datetime.now(TIMEZONE).replace(second=0, microsecond=0)
 
 # ============================================
 # GOOGLE AUTH (Sheets + Drive)
@@ -48,7 +49,7 @@ def get_or_create_worksheet(sh, name):
         print(f"🆕 Created new sheet '{name}'")
 
     # --- ensure headers ---
-    headers = ["Timestamp", "Day", "Route", "Duration (min)", "Directions"]
+    headers = ["Timestamp", "Day", "Route", "Duration (min)", "Length (miles)", "Directions"]
     existing_values = ws.get_all_values()
 
     # Treat [[""]] (Google’s default empty row) as empty
@@ -56,7 +57,7 @@ def get_or_create_worksheet(sh, name):
         ws.clear()
         ws.append_row(headers)
         print(f"🪶 Added headers to sheet '{name}'")
-    elif existing_values[0] != headers:
+    elif existing_values[0] != headers and name != "LastRunLog":
         print(f"⚠️ Header mismatch in '{name}' — consider standardizing manually")
 
     return ws
@@ -130,31 +131,39 @@ def log_route_to_sheet(ws, ws_log, route_name, origin, destination, interval, da
 
     for r in routes:
         leg = r["legs"][0]
+
+        # Extract key info
         duration_min = round(leg.get("duration_in_traffic", leg["duration"])["value"] / 60, 1)
         distance_mi = round(leg["distance"]["value"] / 1609.34, 1)
         summary = r.get("summary", "N/A")
-        # this is the encoded path of that specific route
-        polyline = r.get("overview_polyline", {}).get("points", "")
 
-        # build a real directions link with the chosen route locked in
-        link = (
-            "https://www.google.com/maps/dir/?api=1"
-            f"&origin={origin}"
-            f"&destination={destination}"
-            f"&travelmode=driving"
-            f"&dir_action=navigate"
-            f"&waypoints="
-            f"&path=enc:{polyline}:"
+        # --- turn-by-turn steps ---
+        steps = leg.get("steps", [])
+        turn_by_turn = " → ".join(
+            step["html_instructions"].replace("<b>", "").replace("</b>", "")
+            for step in steps
         )
 
+        # --- clean Google Maps link (no polyline junk) ---
+        encoded_origin = urllib.parse.quote(origin)
+        encoded_destination = urllib.parse.quote(destination)
+        maps_link = (
+            f"https://www.google.com/maps/dir/?api=1"
+            f"&origin={encoded_origin}"
+            f"&destination={encoded_destination}"
+            f"&travelmode=driving"
+            f"&dir_action=navigate"
+        )
+
+        # --- append to sheet ---
         ws.append_row([
             now.strftime("%Y-%m-%d %H:%M:%S"),
             now.strftime("%A"),
             summary,
             duration_min,
-            link
+            distance_mi,
+            turn_by_turn,
         ])
-        print(f"✅ Logged route {route_name} ({summary}) at {now.strftime('%H:%M:%S')}")
 
     # --- update last run ONLY after successful log ---
     update_last_run_time(ws_log, route_name, now)

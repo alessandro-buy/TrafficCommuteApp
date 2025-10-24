@@ -1,9 +1,4 @@
 venv/
-.vscode/
-__pycache__/
-*.tar.gz
-google-cloud-sdk/
-*.log
 notes.txt
 .gcloudignore
 client_secret.json
