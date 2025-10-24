@@ -6,3 +6,5 @@ google-cloud-sdk/
 *.log
 notes.txt
 .gcloudignore
+client_secret.json
+token.json
