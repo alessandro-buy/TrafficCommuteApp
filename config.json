@@ -1,0 +1,40 @@
+{
+  "routes": [
+    {
+      "name": "ToWork",
+      "origin": "1250 N LaSalle Dr, Chicago, IL",
+      "destination": "8614 W Catalpa Ave, Chicago, IL",
+      "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      "start": "06:30",
+      "end": "09:30",
+      "interval": 4.5
+    },
+    {
+      "name": "ToHome",
+      "origin": "8614 W Catalpa Ave, Chicago, IL",
+      "destination": "1250 N LaSalle Dr, Chicago, IL",
+      "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      "start": "15:30",
+      "end": "6:30",
+      "interval": 4.5
+    },
+    {
+      "name": "OakParkToUIC",
+      "origin": "1205 N East Ave, Oak Park, IL",
+      "destination": "750 W Taylor St, Chicago, IL",
+      "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      "start": "07:30",
+      "end": "10:00",
+      "interval": 4.5
+    },
+    {
+      "name": "HomeToOakPark",
+      "origin": "1255 N Sandburg Terrace, Chicago, IL 60610",
+      "destination": "1205 N East Ave, Oak Park, IL",
+      "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      "start": "07:30",
+      "end": "11:00",
+      "interval": 1
+    }
+  ]
+}
